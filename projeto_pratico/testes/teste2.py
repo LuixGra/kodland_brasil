@@ -3,6 +3,8 @@ import sys
 import random
 import time
 
+from pgzero.clock import schedule
+
 import random
 
 pergunta = ""
@@ -271,12 +273,13 @@ class Inimigo:
 
         if self.estado == "atacando":
             self.images = self.attack_imgs
-            
+                
             if self.current_frame >= 8:
                 self.estado = "esperando"
                 estado_inimigo = "esperando"
             
         if self.estado == "esperando":
+            estado_inimigo = "esperando"
             self.pos[0] = 700
             self.images = self.idle_imgs
 
@@ -417,14 +420,16 @@ def update(dt):
         player.update_combat(dt)
 
         #enemy
-        enemy.update(dt)
+        enemy.update(dt)    
         
         global tempo_restante
         tempo_restante -= dt
 
-        if tempo_restante <= 0 and enemy.estado == "esperando" and player.estado != "correndo" and player.estado != "atacando":
+        if tempo_restante <= 0:
             enemy.current_frame = 0
-            enemy.estado = "correndo"
+            estado_inimigo = "correndo"
+            gerar_pergunta()
+            tempo_restante = 11
            
         #ataque do player
         if player.estado == "correndo":
@@ -441,9 +446,8 @@ def update(dt):
             player.estado = "atacando"
             
         if enemy.hp == 0:
-            estado_jogo = "ganhou"
-            tempo_restante = 5
-            player.update_combat(dt)
+            mudar_para_ganhou()
+            estado_player = "esperando"
             
            
         
@@ -617,10 +621,11 @@ def draw_background():
 
 
 def verificar_resposta():
-    global resposta_jogador, tempo_restante, estado_player, estado_inimigo, estado_jogo
+    global resposta_jogador, tempo_restante, estado_player, estado_inimigo, estado_jogo, player, enemy
 
     if resposta_jogador.isdigit():
         if int(resposta_jogador) == resposta_correta:
+            player.current_frame = 0
             print("Correto!")
             estado_player = "correndo"
             gerar_pergunta()
@@ -629,6 +634,7 @@ def verificar_resposta():
             
         else:
             print("Errado!")
+            enemy.current_frame = 0
             estado_inimigo = "correndo"
             player.hp -= enemy.dano
             if player.hp == 0:
@@ -636,5 +642,19 @@ def verificar_resposta():
             tempo_restante = 11
             gerar_pergunta()
 
+def reiniciar():
+    global estado_jogo, musica_combate
+    music.stop()
+    musica_combate = False
+    music.play("musica_tema")
+
+    enemy.hp = 10
+    estado_jogo = "jogo"
+
+def mudar_para_ganhou():
+    global estado_jogo
+
+    estado_jogo = "ganhou"
+    schedule(reiniciar, 5.0)
 
 pgzrun.go()
