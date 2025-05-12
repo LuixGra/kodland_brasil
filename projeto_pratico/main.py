@@ -429,6 +429,7 @@ def update(dt):
             enemy.current_frame = 0
             estado_inimigo = "correndo"
             gerar_pergunta()
+            player.hp -= enemy.dano
             tempo_restante = 11
            
         #ataque do player
